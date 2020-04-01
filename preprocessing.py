@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 		
-class RandomPDSampler(BaseEstimator, TransformerMixin):
+class RandomPDSampler(BaseEstimator, TransformerMixin): #Breaks sklearn interface!
     def __init__(self, max_points=None, weight_function=None):
         self.max_points = max_points
         self.weight_function = weight_function
@@ -12,7 +12,7 @@ class RandomPDSampler(BaseEstimator, TransformerMixin):
     def transform(self, X):
         out_diagram = np.concatenate(X)
         if not self.max_points or len(out_diagram) <= self.max_points:
-            return [out_diagram]
+            return out_diagram
         
         p = None
         if self.weight_function:
@@ -22,7 +22,7 @@ class RandomPDSampler(BaseEstimator, TransformerMixin):
 
         choice = np.random.choice(len(out_diagram), self.max_points, p=p, replace=False)
         
-        return [out_diagram[choice]]
+        return out_diagram[choice]
 
 class DiagramConsolidator(BaseEstimator, TransformerMixin):
     '''
