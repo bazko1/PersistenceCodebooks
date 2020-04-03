@@ -1,16 +1,27 @@
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.base import BaseEstimator, TransformerMixin, ClusterMixin
 
+class PersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
+    def __init__(self, cluster, sampler=None):
+        self.cluster = cluster
+        self.sampler = sampler
 
-class PersistentBow(KMeans):
+    @property
+    def n_clusters(self):
+        return self.cluster.n_clusters
+
     def fit(self, X, y=None, sample_weight=None):
+        if self.sampler:
+            X = self.sampler.fit_transform(X, y)
         X = np.concatenate(X)
-        return super().fit(X, y, sample_weight)
+        self.cluster.fit(X, y, sample_weight)
+
+        return self
 
     def predict(self, X, sample_weight=None):
         out = []
         for diagram in X:
-            out.append(super().predict(diagram, sample_weight))
+            out.append(self.cluster.predict(diagram, sample_weight))
         return np.array(out)
 
     def transform(self, X):
@@ -19,7 +30,7 @@ class PersistentBow(KMeans):
         '''
         out = []
         for diagram in X:
-            pred = super().predict(diagram)
+            pred = self.cluster.predict(diagram)
             histogram = np.bincount(pred, minlength=self.n_clusters)
             out.append(histogram)
 

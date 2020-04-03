@@ -6,22 +6,25 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.spatial._plotutils import _held_figure
 
 
-def plot_persistence_bow(pd, bow):
-    pred_clusters = bow.predict([pd])[0]
-    bins = list(range(bow.n_clusters))
-    histogram = np.bincount(pred_clusters, minlength=bow.n_clusters)
-    colors = matplotlib.cm.cividis(np.linspace(0, 0.9, bow.n_clusters))
+def plot_bow(bow, height=None, ax=None):
+    if not ax:
+        ax = plt.axes()
 
-    plt.bar(bins, histogram, color=colors)
+    bins = list(range(len(bow)))
+    colors = matplotlib.cm.cividis(np.linspace(0, 0.9, len(bow)))
+
+    ax.bar(bins, bow, color=colors)
+    if height:
+        ax.set_ylim(0,height)
 
 
 # Copied from scipy.spatial._plotutils and modified
-def plot_voronoi(bow, plot_range=(1, 1), ax=None, **kw):
+def plot_voronoi(kmeans, plot_range=(1, 1), ax=None, **kw):
     if ax is None:
         ax = plt.axes()
 
     plot_range = np.array(plot_range)
-    vor = Voronoi(bow.cluster_centers_)
+    vor = Voronoi(kmeans.cluster_centers_)
 
     if vor.points.shape[1] != 2:
         raise ValueError("Voronoi diagram is not 2-D")
