@@ -23,11 +23,10 @@ class PersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return self.cluster.n_clusters
 
     def fit(self, X, y=None, sample_weight=None):
-        # TODO: To be discussed, is it enough repeated operations that we should prepare Pipeline[transformator, scaler?
         if self.transformator:
-            self.transformator.fit(X, y)
+            X = self.transformator.fit_transform(X, y)
         if self.scaler:
-            self.scaler.fit(X, y)
+            X = self.scaler.fit_transform(X, y)
         if self.sampler:
             X = self.sampler.fit_transform(X, y)
         X = np.concatenate(X)
