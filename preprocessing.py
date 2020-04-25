@@ -21,10 +21,11 @@ class RandomPDSampler(BaseEstimator):
 
         p = None
         if self.weight_function:
-            persistencies = out_diagram[:, 1]
-            p = np.vectorize(self.weight_function)(persistencies)
+            rows = out_diagram.shape[0]
+            p = np.zeros(rows)
+            for row in range(rows):
+                p[row] = self.weight_function(out_diagram[row])
             p /= np.sum(p)
-
 
         choice = rnd.choice(len(out_diagram), self.max_points, p=p, replace=False)
 

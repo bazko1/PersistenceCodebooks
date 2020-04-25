@@ -88,10 +88,10 @@ class StablePersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
         return self
 
-    def predict(self, X, sample_weight=None):
+    def predict(self, X):
         out = []
         for diagram in X:
-            out.append(self.mixture.predict(diagram, sample_weight))
+            out.append(self.mixture.predict(diagram))
 
         return np.array(out)
 
@@ -107,7 +107,7 @@ class StablePersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
         for diagram in X:
             probabilities = self.mixture.predict_proba(diagram)
-            histogram = np.sum(probabilities, axis=0)
+            histogram = np.sum(probabilities, axis=0) * self.mixture.weights_
             out.append(histogram)
 
         return np.array(out)
