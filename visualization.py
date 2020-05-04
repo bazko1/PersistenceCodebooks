@@ -19,7 +19,7 @@ def plot_bow(bow, height=None, ax=None):
 
 
 # Copied from scipy.spatial._plotutils and modified
-def plot_voronoi(kmeans, plot_range=(1, 1), ax=None, **kw):
+def plot_voronoi(kmeans, y_lim=(0, 1), x_lim=(0, 1), ax=None, **kw):
     if ax is None:
         ax = plt.axes()
 
