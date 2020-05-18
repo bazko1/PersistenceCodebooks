@@ -19,3 +19,13 @@ def save(obj, path):
         
     with open(path, "bw") as f:
         dill.dump(obj, f)
+        
+# Weight functions
+def const(x):
+    return 1
+
+def linear(x):
+    return x[1]
+
+def pow2(x):
+    return x[1]**2
