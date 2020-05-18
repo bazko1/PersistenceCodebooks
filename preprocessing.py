@@ -61,7 +61,7 @@ class GridPDSampler(BaseEstimator):
                 indices = y_points[y-1] <= X[:, 1]
             else:
                 indices = y_points[y-1] <  X[:, 1]
-            indices &= X[:, 1] < y_points[y]
+            indices &= X[:, 1] <= y_points[y]
             y_split = X[indices]
 
             for x in range(1, len(x_points)):            
@@ -69,7 +69,7 @@ class GridPDSampler(BaseEstimator):
                     indices = x_points[x-1] <= y_split[:, 0]
                 else:
                     indices = x_points[x-1] <  y_split[:, 0]
-                indices &= y_split[:, 0] < x_points[x]
+                indices &= y_split[:, 0] <= x_points[x]
                 grid = y_split[indices]
 
                 out.append(

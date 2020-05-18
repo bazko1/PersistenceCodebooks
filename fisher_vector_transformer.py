@@ -13,31 +13,25 @@ class FisherVectorTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self,
                  gmm_clusters_number=10,
-                 sampler=RandomPDSampler(1000),
-                 init_mode='kmeans'):
-
+                 init_mode='kmeans',
+                 transformator=BirthPersistenceTransform(),
+                 scaler=DiagramScaler(use=True, scalers=[((0,), MaxAbsScaler(copy=False)), ((1,), MaxAbsScaler(copy=False))]),
+                 sampler=None):
         self.gmm_clusters_number = gmm_clusters_number
         self.init_mode = init_mode
-        self.transformator = BirthPersistenceTransform()
-        self.scaler = DiagramScaler(
-            use=True,
-            scalers=[((0,),
-                      MaxAbsScaler(copy=False)),
-                      ((1,),
-                      MaxAbsScaler(copy=False))])
-
+        self.transformator = transformator
+        self.scaler = scaler
         self.sampler = sampler
         self.gmm_ = None
 
     def fit(self, X, y=None):
-
-        X = self.transformator.fit_transform(X, y)
-        X = self.scaler.fit_transform(X, y)
-
+        if self.transformator:
+            X = self.transformator.fit_transform(X, y)
+        if self.scaler:
+            X = self.scaler.fit_transform(X, y)
         if self.sampler:
-            X = np.float32(self.sampler.fit_transform(X, y))[0]
-        else:
-            X = np.float32(np.concatenate(X))
+            X = self.sampler.fit_transform(X, y)
+        X = np.float32(np.concatenate(X))
 
         means, covars, priors, ll, posteriors = gmm(
             X,
