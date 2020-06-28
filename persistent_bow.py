@@ -4,7 +4,7 @@ from gudhi.representations.preprocessing import BirthPersistenceTransform, Diagr
 from sklearn.preprocessing import MaxAbsScaler
 
 
-class PersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
+class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
     def __init__(self,
                  cluster,
                  *,
@@ -51,7 +51,9 @@ class PersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
         for diagram in X:
             pred = self.cluster.predict(diagram)
-            histogram = np.bincount(pred, minlength=self.n_clusters)
+            weights_ = tuple(map(lambda x: x[1], diagram))
+            histogram = np.bincount(pred, weights=weights_, minlength=self.n_clusters)
+            histogram /= np.linalg.norm(histogram)
             out.append(histogram)
 
         return np.array(out)
@@ -63,7 +65,7 @@ class PersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return self.fit(X, y, sample_weight).predict(X, sample_weight)
 
 
-class StablePersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
+class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
     def __init__(self,
                  mixture,
                  *,
@@ -108,6 +110,7 @@ class StablePersistentBow(BaseEstimator, TransformerMixin, ClusterMixin):
         for diagram in X:
             probabilities = self.mixture.predict_proba(diagram)
             histogram = np.sum(probabilities, axis=0) * self.mixture.weights_
+            histogram /= np.linalg.norm(histogram)
             out.append(histogram)
 
         return np.array(out)

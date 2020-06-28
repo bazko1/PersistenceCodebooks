@@ -8,7 +8,7 @@ from sklearn.preprocessing import MaxAbsScaler
 from preprocessing import RandomPDSampler
 
 
-class FisherVectorTransformer(BaseEstimator, TransformerMixin):
+class PersistenceFV(BaseEstimator, TransformerMixin):
     """Fit GMM and compute Fisher vectors"""
 
     def __init__(self,
