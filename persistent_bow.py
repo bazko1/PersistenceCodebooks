@@ -53,7 +53,8 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
             pred = self.cluster.predict(diagram)
             weights_ = tuple(map(lambda x: x[1], diagram))
             histogram = np.bincount(pred, weights=weights_, minlength=self.n_clusters)
-            histogram /= np.linalg.norm(histogram)
+            histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
+                        / np.linalg.norm(histogram)
             out.append(histogram)
 
         return np.array(out)
@@ -110,7 +111,8 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
         for diagram in X:
             probabilities = self.mixture.predict_proba(diagram)
             histogram = np.sum(probabilities, axis=0) * self.mixture.weights_
-            histogram /= np.linalg.norm(histogram)
+            histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
+                        / np.linalg.norm(histogram)
             out.append(histogram)
 
         return np.array(out)
