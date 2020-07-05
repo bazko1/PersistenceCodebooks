@@ -10,12 +10,16 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
                  *,
                  transformator=BirthPersistenceTransform(),
                  scaler=DiagramScaler(use=True, scalers=[((0,), MaxAbsScaler(copy=False)), ((1,), MaxAbsScaler(copy=False))]),
-                 sampler=None
+                 sampler=None,
+                 normalize=True,
+                 cluster_weighting=None
                  ):
         self.cluster = cluster
         self.transformator = transformator
         self.scaler = scaler
         self.sampler = sampler
+        self.normalize = normalize
+        self.cluster_weighting = cluster_weighting
 
     @property
     def n_clusters(self):
@@ -51,10 +55,18 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
         for diagram in X:
             pred = self.cluster.predict(diagram)
-            weights_ = tuple(map(lambda x: x[1], diagram))
+            weights_ = None
+
+            if self.cluster_weighting:
+                weights_ = tuple(map(self.cluster_weighting, diagram))
             histogram = np.bincount(pred, weights=weights_, minlength=self.n_clusters)
-            histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
-                        / np.linalg.norm(histogram)
+
+            if self.normalize:
+                norm = np.linalg.norm(histogram)
+                if not np.isclose(norm, 0):
+                    histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
+                                / norm
+
             out.append(histogram)
 
         return np.array(out)
@@ -72,11 +84,15 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
                  *,
                  transformator=BirthPersistenceTransform(),
                  scaler=DiagramScaler(use=True, scalers=[((0,), MaxAbsScaler(copy=False)), ((1,), MaxAbsScaler(copy=False))]),
-                 sampler=None):
+                 sampler=None,
+                 normalize=True,
+                 cluster_weighting=None):
         self.mixture = mixture
         self.transformator = transformator
         self.scaler = scaler
         self.sampler = sampler
+        self.normalize = normalize
+        self.cluster_weighting = cluster_weighting
 
     def fit(self, X, y=None):
         if self.transformator:
@@ -110,9 +126,16 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
         for diagram in X:
             probabilities = self.mixture.predict_proba(diagram)
+            if self.cluster_weighting:
+                probabilities *= np.array(list(map(self.cluster_weighting, diagram))).reshape(-1, 1)
             histogram = np.sum(probabilities, axis=0) * self.mixture.weights_
-            histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
-                        / np.linalg.norm(histogram)
+
+            if self.normalize:
+                norm = np.linalg.norm(histogram)
+                if not np.isclose(norm, 0):
+                    histogram = np.array([np.sign(el) * np.sqrt(np.abs(el)) for el in histogram]) \
+                                / norm
+
             out.append(histogram)
 
         return np.array(out)
