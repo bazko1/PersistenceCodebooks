@@ -13,7 +13,7 @@ def fixarray(x):
     x = x.reshape([d[0],d[1]])
     return x
 
-class FisherVectorTransformer(BaseEstimator, TransformerMixin):
+class PersistenceFV(BaseEstimator, TransformerMixin):
     """Fit GMM and compute Fisher vectors"""
 
     def __init__(self,
