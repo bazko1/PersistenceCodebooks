@@ -29,32 +29,37 @@ class RandomPDSampler(BaseEstimator):
 
     def transform(self, X):
         return [_sample(
-            np.concatenate(X), 
-            self.max_points, 
-            self.weight_function, 
+            np.concatenate(X),
+            self.max_points,
+            self.weight_function,
             self.random_state
         )]
 
     def fit_transform(self, X, y=None):
         return self.transform(X)
-    
+
 class GridPDSampler(BaseEstimator):
     def __init__(self, grid_shape, max_points, weight_function=None, random_state=None):
         self.grid_shape = grid_shape
         self.max_points = max_points
+        self.cell_number = (self.grid_shape[0] * self.grid_shape[1])
+        self.single_cell_points = max_points // self.cell_number
         self.weight_function = weight_function
         self.random_state = random_state
-       
+        self.distributable_points = 0
+
+
     def fit(self, X, y=None):
         return self
-    
+
     def transform(self, X):
         out = []
-        
+
         X = np.concatenate(X)
         y_points = np.linspace(np.min(X[:, 1]), np.max(X[:, 1]), self.grid_shape[0] + 1)
         x_points = np.linspace(np.min(X[:, 0]), np.max(X[:, 0]), self.grid_shape[1] + 1)
-        
+
+        grids = []
         #Create and sample grids
         for y in range(1, len(y_points)):
             if y == 1:
@@ -64,7 +69,7 @@ class GridPDSampler(BaseEstimator):
             indices &= X[:, 1] <= y_points[y]
             y_split = X[indices]
 
-            for x in range(1, len(x_points)):            
+            for x in range(1, len(x_points)):
                 if x == 1:
                     indices = x_points[x-1] <= y_split[:, 0]
                 else:
@@ -72,17 +77,35 @@ class GridPDSampler(BaseEstimator):
                 indices &= y_split[:, 0] <= x_points[x]
                 grid = y_split[indices]
 
-                out.append(
-                    _sample(
-                        grid, 
-                        self.max_points, 
-                        self.weight_function, 
-                        self.random_state
-                    )
+                cell_length = len(grid)
+                if cell_length < self.single_cell_points:
+                    self.distributable_points += self.single_cell_points - cell_length
+                    grids.append((grid, True))
+                else:
+                    grids.append((grid, False))
+
+
+        gaining_cells_number = len([True for grid, is_too_small in grids if not is_too_small])
+        gain_points_number = self.distributable_points // gaining_cells_number
+
+        for grid, is_too_small in grids:
+
+            sample_number = self.single_cell_points
+
+            if not is_too_small:
+                sample_number += gain_points_number
+
+            out.append(
+                _sample(
+                    grid,
+                    sample_number,
+                    self.weight_function,
+                    self.random_state
                 )
-        
+            )
+
         return [np.concatenate(out)]
-                
+
     def fit_transform(self, X, y=None):
         return self.transform(X)
 
