@@ -1,5 +1,5 @@
 # Persistence codebooks
-Repository contains code and experiments based on following <a href="https://github.com/bziiuj/pcodebooks" target="_blank">repository</a>.
+Repository contains reimplementation of code and experiments, based on <a href="https://github.com/bziiuj/pcodebooks" target="_blank">this repository</a>, which implements <a href="https://arxiv.org/pdf/1802.04852.pdf" target="_blank">following paper</a>.
 The purpouse of this repo is to reproduce results and simplify further research using python3 as tool.
 ## Installation
 We manage packages via anaconda.
