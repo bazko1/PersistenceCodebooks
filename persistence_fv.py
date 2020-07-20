@@ -7,12 +7,6 @@ from gudhi.representations.preprocessing import BirthPersistenceTransform, Diagr
 from sklearn.preprocessing import MaxAbsScaler
 from preprocessing import RandomPDSampler
 
-def fixarray(x):
-    d = x.shape
-    x = x.T.reshape([d[0]*d[1],])
-    x = x.reshape([d[0],d[1]])
-    return x
-
 class PersistenceFV(BaseEstimator, TransformerMixin):
     """Fit GMM and compute Fisher vectors"""
 
@@ -43,16 +37,13 @@ class PersistenceFV(BaseEstimator, TransformerMixin):
             n_clusters=self.gmm_clusters_number,
             init_mode=self.init_mode,
         )
-        means = means.transpose()
-        covars = covars.transpose()
         self.gmm_ = means, covars, priors
-
         return self
-    
+
     def set_model(self, means, covars, priors):
         self.gmm_ = means, covars, priors
         return self
-    
+
     def transform(self, X, y=None):
         if self.transformator:
              X = self.transformator.transform(X)
@@ -63,10 +54,6 @@ class PersistenceFV(BaseEstimator, TransformerMixin):
     def __fisher_vector(self, x):
         """Compute Fisher vector from feature vector x."""
         means, covars, priors = self.gmm_
-        x = np.float32(x.T)
-        # fixing arrays due to bug in vlfeat
-        x = fixarray(x)
-        means = fixarray(means)
-        covars = fixarray(covars)
-        return fisher(x, means, covars, priors, improved=True)
+        x = np.float32(x)
+        return fisher(x, means, covars, priors, improved=True, normalized=True)
 
