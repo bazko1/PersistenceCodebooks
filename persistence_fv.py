@@ -8,8 +8,12 @@ from sklearn.preprocessing import MaxAbsScaler
 from preprocessing import RandomPDSampler
 
 class PersistenceFV(BaseEstimator, TransformerMixin):
-    """Fit GMM and compute Fisher vectors"""
+    """Fisher vector wrap for persistence diagrams.
 
+    Implements fisher vector algorithms for comparison
+    experiments purposes as described in section 3.7.
+    https://arxiv.org/pdf/1802.04852.pdf?fbclid=IwAR0Or4JbGpvQPr7Il9bLZ7vVZetyOCjRPNF1MuOJ1H9bEwNl7inp4VgUhmo#subsection.3.7
+    """
     def __init__(self,
                  gmm_clusters_number=10,
                  init_mode='kmeans',
@@ -24,6 +28,7 @@ class PersistenceFV(BaseEstimator, TransformerMixin):
         self.gmm_ = None
 
     def fit(self, X, y=None):
+        """Data transformation and GMM fit with sampling."""
         if self.transformator:
             X = self.transformator.fit_transform(X, y)
         if self.scaler:
@@ -45,6 +50,7 @@ class PersistenceFV(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        """Data transformation and fisher vector computation."""
         if self.transformator:
              X = self.transformator.transform(X)
         if self.scaler:
