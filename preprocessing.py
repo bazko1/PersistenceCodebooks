@@ -38,6 +38,9 @@ def _grid_generator(X, y_points, x_points):
 
 
 class RandomPDSampler(BaseEstimator):
+    '''
+    Used to consolidate and take random samples from list of persistence diagrams.
+    '''
     def __init__(self, max_points=None, weight_function=None, random_state=None):
         self.max_points = max_points
         self.weight_function = weight_function
@@ -58,6 +61,9 @@ class RandomPDSampler(BaseEstimator):
         return self.transform(X)
     
 class GridPDSampler(BaseEstimator):
+    '''
+    This class will consolidate list od persistence diagrams, divide consolidated diagram into smaller cells, distribute uniformly number of samples between them, and finally randomly sample from each cell, and consolidate samples back into diagram.
+    '''
     def __init__(self, grid_shape, max_points, weight_function=None, random_state=None):
         self.grid_shape = grid_shape
         self.max_points = max_points

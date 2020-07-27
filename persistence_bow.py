@@ -5,6 +5,11 @@ from sklearn.preprocessing import MaxAbsScaler
 
 
 class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
+    '''
+    Class used for vectorization of persistence diagrams. Implements algorithm described in section 3.1 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.1>`.
+    Original uses KNN for clustering, but this class should be able to use any hard-clustering class compatible with scikit api.
+    '''
+    
     def __init__(self,
                  cluster,
                  *,
@@ -79,6 +84,11 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
 
 class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
+    '''
+    Class used for stable vectorization of persistence diagrams. Implements algorithm described in section 3.4 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.4>`.
+    Uses gaussian mixture model in order to be stable with respect to 1-Wasserstein distance between the diagrams.
+    '''
+
     def __init__(self,
                  mixture,
                  *,
