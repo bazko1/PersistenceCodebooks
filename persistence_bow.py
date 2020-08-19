@@ -5,11 +5,13 @@ from sklearn.preprocessing import MaxAbsScaler
 
 
 class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
-    '''
-    Class used for vectorization of persistence diagrams. Implements algorithm described in section 3.1 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.1>`.
+    """
+    Class used for vectorization of persistence diagrams.
+
+    Implements algorithm described in section 3.1 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.1>`.
     Original uses KNN for clustering, but this class should be able to use any hard-clustering class compatible with scikit api.
-    '''
-    
+    """
+
     def __init__(self,
                  cluster,
                  *,
@@ -19,6 +21,20 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
                  normalize=True,
                  cluster_weighting=None
                  ):
+        """
+        PersistenceBow constructor.
+
+        Parameters:
+            cluster: Clustering object (sklearn API consistent) should contain n_clusters attribute.
+                    Eg. sklearn.cluster.KMeans.
+            transformator: PD flow initial transformator.
+            scaler: PD flow initial scaler.
+            sampler: Data sampler to be used during train.
+            normalize: If normalize PBow by taking the square root of each component
+                    and dividing it by the norm of the whole vector.
+            cluster_weighting: Weighting function to be applied on diagrams (R^2 -> R).
+                               If None, all observations are assigned equal weight.
+        """
         self.cluster = cluster
         self.transformator = transformator
         self.scaler = scaler
@@ -31,6 +47,13 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return self.cluster.n_clusters
 
     def fit(self, X, y=None, sample_weight=None):
+        """
+        Fit the PersitenceBow class on a list of persistence diagrams.
+
+        Parameters:
+            X (list of n x 2 numpy arrays): input persistence diagrams.
+            y (n x 1 array): persistence diagram labels.
+        """
         if self.transformator:
             X = self.transformator.fit_transform(X, y)
         if self.scaler:
@@ -43,15 +66,24 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return self
 
     def predict(self, X, sample_weight=None):
+        """
+        Cluster predict on a list of persistence diagrams.
+        """
         out = []
         for diagram in X:
             out.append(self.cluster.predict(diagram, sample_weight))
         return np.array(out)
 
     def transform(self, X):
-        '''
-        Returns list of bags-of-words
-        '''
+        """
+        Compute persistence-bags-of-words for each diagram.
+        
+        Parameters:
+            X (list of n x 2 numpy arrays): input persistence diagrams.
+        Returns:
+            numpy array with n (number of diagrams) n_clusters shaped numpy arrays containing 
+            pbow calculation for each diagram.
+        """
         out = []
         if self.transformator:
             X = self.transformator.transform(X)
@@ -84,10 +116,12 @@ class PersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
 
 
 class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
-    '''
-    Class used for stable vectorization of persistence diagrams. Implements algorithm described in section 3.4 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.4>`.
+    """
+    Class used for stable vectorization of persistence diagrams.
+
+    Implements algorithm described in section 3.4 of `Persistence Codebooks for Topological Data Analysis <https://arxiv.org/pdf/1802.04852.pdf#subsection.3.4>`.
     Uses gaussian mixture model in order to be stable with respect to 1-Wasserstein distance between the diagrams.
-    '''
+    """
 
     def __init__(self,
                  mixture,
@@ -97,6 +131,20 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
                  sampler=None,
                  normalize=True,
                  cluster_weighting=None):
+        """
+        StablePersistenceBow constructor.
+        
+        Parameters:
+            mixture: Gaussian mixture model implementation compatible with sklern API.
+                    Should contain n_components, weights_ attribute.
+            transformator: PD flow initial transformator.
+            scaler: PD flow initial scaler.
+            sampler: Data sampler to be used during train.
+            normalize: If normalize PBow by taking the square root of each component
+                    and dividing it by the norm of the whole vector.
+            cluster_weighting: Weighting function to be applied on diagrams (R^2 -> R).
+                               If None, all observations are assigned equal weight.
+        """
         self.mixture = mixture
         self.transformator = transformator
         self.scaler = scaler
@@ -118,6 +166,9 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return self
 
     def predict(self, X):
+        """
+        Gaussian mixture predict on each diagram.
+        """
         out = []
         for diagram in X:
             out.append(self.mixture.predict(diagram))
@@ -125,9 +176,15 @@ class StablePersistenceBow(BaseEstimator, TransformerMixin, ClusterMixin):
         return np.array(out)
 
     def transform(self, X):
-        '''
-        Returns list of bags-of-words
-        '''
+        """
+        Compute stable persistence-bags-of-words for each diagram.
+        
+        Parameters:
+            X (list of n x 2 numpy arrays): input persistence diagrams.
+        Returns:
+            numpy array with n (number of diagrams) n_components shaped numpy arrays containing 
+            spbow calculation for each diagram.
+        """
         out = []
         if self.transformator:
             X = self.transformator.transform(X)
