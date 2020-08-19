@@ -15,47 +15,51 @@ class PersistenceFV(BaseEstimator, TransformerMixin):
     https://arxiv.org/pdf/1802.04852.pdf?fbclid=IwAR0Or4JbGpvQPr7Il9bLZ7vVZetyOCjRPNF1MuOJ1H9bEwNl7inp4VgUhmo#subsection.3.7
     """
     def __init__(self,
-                 gmm_clusters_number=10,
-                 init_mode='kmeans',
+                 fisher_vector=None,
                  transformator=BirthPersistenceTransform(),
                  scaler=DiagramScaler(use=True, scalers=[((0,), MaxAbsScaler(copy=False)), ((1,), MaxAbsScaler(copy=False))]),
                  sampler=None):
-        self.gmm_clusters_number = gmm_clusters_number
-        self.init_mode = init_mode
+        """
+        Parameters:
+            fisher_vector: Fisher vector encoder object (sklearn API consistent).
+                    Eg. FisherVectorEncoder.
+            transformator: PD flow initial transformator.
+            scaler: PD flow initial scaler.
+            sampler: Data sampler to be used during train.
+        """
+        self.fisher_vector = fisher_vector
         self.transformator = transformator
         self.scaler = scaler
         self.sampler = sampler
-        self.gmm_ = None
 
     def fit(self, X, y=None):
-        """Data transformation and GMM fit with sampling."""
+        """
+        Fits underlying fisher vector, transformator, and scaler.
+        
+        Parameters:
+            X (list of n x 2 numpy arrays): input persistence diagrams.
+            y (n x 1 array): persistence diagram labels.
+        """
         if self.transformator:
             X = self.transformator.fit_transform(X, y)
         if self.scaler:
             X = self.scaler.fit_transform(X, y)
         if self.sampler:
             X = self.sampler.fit_transform(X, y)
-        X = np.float32(np.concatenate(X))
+        X = np.concatenate(X)
+        
+        self.fisher_vector.fit(X, y)
 
-        means, covars, priors, ll, posteriors = gmm(
-            X,
-            n_clusters=self.gmm_clusters_number,
-            init_mode=self.init_mode,
-        )
-        self.gmm_ = means, covars, priors
-        return self
-
-    def set_model(self, means, covars, priors):
-        self.gmm_ = means, covars, priors
         return self
 
     def transform(self, X, y=None):
-        """Data transformation and fisher vector computation."""
+        """Computes the fisher vector for each diagram from `X` (after transforming and scaling it first)."""
         if self.transformator:
              X = self.transformator.transform(X)
         if self.scaler:
             X = self.scaler.transform(X)
-        return np.array(list(map(lambda x: self.__fisher_vector(x), X)))
+            
+        return np.array([self.fisher_vector.transform(diagram) for diagram in X])
 
     def __fisher_vector(self, x):
         """Compute Fisher vector from feature vector x."""
