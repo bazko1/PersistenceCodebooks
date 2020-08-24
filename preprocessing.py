@@ -28,6 +28,26 @@ def _sample(X, max_points=None, weight_function=None, random_state=None):
 
     return X[rnd.choice(rows, max_points, p=p, replace=False)]
 
+def _grid_generator(X, y_points, x_points):
+    """Iterate over grid cells"""
+    for y in range(1, len(y_points)):
+        if y == 1:
+            mask = y_points[y - 1] <= X[:, 1]
+        else:
+            mask = y_points[y - 1] <  X[:, 1]
+        mask &= X[:, 1] <= y_points[y]
+        y_split = X[mask]
+
+        for x in range(1, len(x_points)):
+            if x == 1:
+                mask = x_points[x - 1] <= y_split[:, 0]
+            else:
+                mask = x_points[x - 1] <  y_split[:, 0]
+            mask &= y_split[:, 0] <= x_points[x]
+
+            yield y_split[mask]
+
+
 class RandomPDSampler(BaseEstimator, TransformerMixin):
     """
     Used to consolidate and take random samples from list of persistence diagrams.
@@ -95,25 +115,6 @@ class GridPDSampler(BaseEstimator, TransformerMixin):
         self.weight_function = weight_function
         self.random_state = random_state
        
-    def _grid_generator(self, X, y_points, x_points):
-    """Iterate over grid cells"""
-    for y in range(1, len(y_points)):
-        if y == 1:
-            mask = y_points[y - 1] <= X[:, 1]
-        else:
-            mask = y_points[y - 1] <  X[:, 1]
-        mask &= X[:, 1] <= y_points[y]
-        y_split = X[mask]
-
-        for x in range(1, len(x_points)):
-            if x == 1:
-                mask = x_points[x - 1] <= y_split[:, 0]
-            else:
-                mask = x_points[x - 1] <  y_split[:, 0]
-            mask &= y_split[:, 0] <= x_points[x]
-
-            yield y_split[mask]
-
     def fit(self, X, y=None):
         """
         Fit the GridPDSampler class on a list of values (For pipeline compatibility - does nothing).
@@ -164,7 +165,7 @@ class GridPDSampler(BaseEstimator, TransformerMixin):
 
         #Sample each grid cell
         for grid_cell, samples in zip(
-                self._grid_generator(X, y_points, x_points),
+                _grid_generator(X, y_points, x_points),
                 samples_to_take.flat):
             out.append(
                 _sample(
